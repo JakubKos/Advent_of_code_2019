@@ -2,6 +2,25 @@ from typing import Set, Tuple, List, Dict
 import sys
 
 
+def decide_next_instruction(current_instruction: Tuple[int, int], instruction_code: str) -> Tuple[int, int]:
+    if instruction_code == 'U':
+        current_instruction_y = current_instruction[1] + 1
+        current_instruction = (current_instruction[0], current_instruction_y)
+    elif instruction_code == 'D':
+        current_instruction_y = current_instruction[1] - 1
+        current_instruction = (current_instruction[0], current_instruction_y)
+    elif instruction_code == 'R':
+        current_instruction_x = current_instruction[0] + 1
+        current_instruction = (current_instruction_x, current_instruction[1])
+    elif instruction_code == 'L':
+        current_instruction_x = current_instruction[0] - 1
+        current_instruction = (current_instruction_x, current_instruction[1])
+    else:
+        raise ValueError("Unexpected instruction appeared, turn instruction")
+
+    return current_instruction
+
+
 def parse_wire_instruction(instruction: str, instruction_dict: Dict, current_instruction: Tuple[int, int],
                            current_step: int) -> Tuple[Dict, Tuple[int, int], int]:
     instruction_code = instruction[0]
@@ -10,40 +29,16 @@ def parse_wire_instruction(instruction: str, instruction_dict: Dict, current_ins
     except ValueError:
         raise ValueError("Unexpected instruction appeared, number instruction")
 
-    if instruction_code == 'U':
-        for iterations in range(instruction_iterations):
-            current_instruction_y = current_instruction[1] + 1
-            current_instruction = (current_instruction[0], current_instruction_y)
-            current_step += 1
-            if current_instruction not in instruction_dict:
-                instruction_dict[current_instruction] = current_step
-    elif instruction_code == 'D':
-        for iterations in range(instruction_iterations):
-            current_instruction_y = current_instruction[1] - 1
-            current_instruction = (current_instruction[0], current_instruction_y)
-            current_step += 1
-            if current_instruction not in instruction_dict:
-                instruction_dict[current_instruction] = current_step
-    elif instruction_code == 'R':
-        for iterations in range(instruction_iterations):
-            current_instruction_x = current_instruction[0] + 1
-            current_instruction = (current_instruction_x, current_instruction[1])
-            current_step += 1
-            if current_instruction not in instruction_dict:
-                instruction_dict[current_instruction] = current_step
-    elif instruction_code == 'L':
-        for iterations in range(instruction_iterations):
-            current_instruction_x = current_instruction[0] - 1
-            current_instruction = (current_instruction_x, current_instruction[1])
-            current_step += 1
-            if current_instruction not in instruction_dict:
-                instruction_dict[current_instruction] = current_step
-    else:
-        raise ValueError("Unexpected instruction appeared, turn instruction")
+    for iterations in range(instruction_iterations):
+        current_instruction = decide_next_instruction(current_instruction, instruction_code)
+        current_step += 1
+        if current_instruction not in instruction_dict:
+            instruction_dict[current_instruction] = current_step
+
     return instruction_dict, current_instruction, current_step
 
 
-def check_wire_intersections(firest_wire_dict: Dict, intersection_dict: Dict, instructions_raw: List) -> Dict:
+def check_wire_intersections(first_wire_dict: Dict, intersection_dict: Dict, instructions_raw: List) -> Dict:
     current_instruction = (0, 0)
     current_step = 0
 
@@ -54,36 +49,11 @@ def check_wire_intersections(firest_wire_dict: Dict, intersection_dict: Dict, in
         except ValueError:
             raise ValueError("Unexpected instruction appeared, number instruction")
 
-        if instruction_code == 'U':
-            for iterations in range(instruction_iterations):
-                current_instruction_y = current_instruction[1] + 1
-                current_instruction = (current_instruction[0], current_instruction_y)
-                current_step += 1
-                if current_instruction in firest_wire_dict:
-                    intersection_dict[current_instruction] = current_step + firest_wire_dict.get(current_instruction)
-        elif instruction_code == 'D':
-            for iterations in range(instruction_iterations):
-                current_instruction_y = current_instruction[1] - 1
-                current_instruction = (current_instruction[0], current_instruction_y)
-                current_step += 1
-                if current_instruction in firest_wire_dict:
-                    intersection_dict[current_instruction] = current_step + firest_wire_dict.get(current_instruction)
-        elif instruction_code == 'R':
-            for iterations in range(instruction_iterations):
-                current_instruction_x = current_instruction[0] + 1
-                current_instruction = (current_instruction_x, current_instruction[1])
-                current_step += 1
-                if current_instruction in firest_wire_dict:
-                    intersection_dict[current_instruction] = current_step + firest_wire_dict.get(current_instruction)
-        elif instruction_code == 'L':
-            for iterations in range(instruction_iterations): 
-                current_instruction_x = current_instruction[0] - 1
-                current_instruction = (current_instruction_x, current_instruction[1])
-                current_step += 1
-                if current_instruction in firest_wire_dict:
-                    intersection_dict[current_instruction] = current_step + firest_wire_dict.get(current_instruction)
-        else:
-            raise ValueError("Unexpected instruction appeared, turn instruction")
+        for iterations in range(instruction_iterations):
+            current_instruction = decide_next_instruction(current_instruction, instruction_code)
+            current_step += 1
+            if current_instruction in first_wire_dict:
+                intersection_dict[current_instruction] = current_step + first_wire_dict.get(current_instruction)
 
     return intersection_dict
 
